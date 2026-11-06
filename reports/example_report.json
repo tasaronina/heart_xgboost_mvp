@@ -1,0 +1,600 @@
+{
+  "project": "MVP: визуально настраиваемый анализ табличных данных / XGBoost",
+  "dataset_name": "heart.csv",
+  "dataset_sha256": "1143eb293c5795db893754bfd1363401f83184ac1a0291f8cea59dc5e07039b4",
+  "research_only": true,
+  "result": {
+    "created_at": "2026-10-26T08:16:01.426605+00:00",
+    "config": {
+      "target_column": "target",
+      "feature_columns": [
+        "age",
+        "sex",
+        "chest_pain_type",
+        "resting_bp",
+        "cholestoral",
+        "fasting_blood_sugar",
+        "restecg",
+        "max_hr",
+        "exang",
+        "oldpeak",
+        "slope",
+        "num_major_vessels",
+        "thal"
+      ],
+      "categorical_columns": [
+        "sex",
+        "chest_pain_type",
+        "fasting_blood_sugar",
+        "restecg",
+        "exang",
+        "slope",
+        "thal"
+      ],
+      "positive_label": 1,
+      "test_size": 0.2,
+      "n_estimators": 100,
+      "max_depth": 3,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "remove_duplicates": true
+    },
+    "sample": {
+      "rows_original": 303,
+      "rows_after_duplicate_removal": 302,
+      "duplicate_rows_removed": 1,
+      "train_rows": 241,
+      "test_rows": 61,
+      "positive_rows": 164,
+      "negative_rows": 138,
+      "positive_test_rows": 33,
+      "negative_test_rows": 28
+    },
+    "metrics": {
+      "accuracy": 0.7868852459016393,
+      "precision": 0.7777777777777778,
+      "recall": 0.8484848484848485,
+      "f1": 0.8115942028985508,
+      "roc_auc": 0.8733766233766234
+    },
+    "confusion_matrix": [
+      [
+        20,
+        8
+      ],
+      [
+        5,
+        28
+      ]
+    ],
+    "roc": {
+      "fpr": [
+        0.0,
+        0.0,
+        0.0,
+        0.14285714285714285,
+        0.14285714285714285,
+        0.17857142857142858,
+        0.17857142857142858,
+        0.21428571428571427,
+        0.21428571428571427,
+        0.25,
+        0.25,
+        0.32142857142857145,
+        0.32142857142857145,
+        0.35714285714285715,
+        0.35714285714285715,
+        0.5,
+        0.5,
+        0.5357142857142857,
+        0.5357142857142857,
+        1.0
+      ],
+      "tpr": [
+        0.0,
+        0.030303030303030304,
+        0.5151515151515151,
+        0.5151515151515151,
+        0.6060606060606061,
+        0.6060606060606061,
+        0.696969696969697,
+        0.696969696969697,
+        0.7878787878787878,
+        0.7878787878787878,
+        0.8484848484848485,
+        0.8484848484848485,
+        0.8787878787878788,
+        0.8787878787878788,
+        0.9393939393939394,
+        0.9393939393939394,
+        0.9696969696969697,
+        0.9696969696969697,
+        1.0,
+        1.0
+      ]
+    },
+    "feature_importance": [
+      {
+        "feature": "thal_2",
+        "importance": 0.20946981012821198
+      },
+      {
+        "feature": "chest_pain_type_0",
+        "importance": 0.15730571746826172
+      },
+      {
+        "feature": "exang_0",
+        "importance": 0.06923171877861023
+      },
+      {
+        "feature": "num_major_vessels",
+        "importance": 0.06269679218530655
+      },
+      {
+        "feature": "slope_1",
+        "importance": 0.046018533408641815
+      },
+      {
+        "feature": "thal_3",
+        "importance": 0.043919965624809265
+      },
+      {
+        "feature": "oldpeak",
+        "importance": 0.04258573055267334
+      },
+      {
+        "feature": "chest_pain_type_2",
+        "importance": 0.03967529907822609
+      },
+      {
+        "feature": "cholestoral",
+        "importance": 0.03721672296524048
+      },
+      {
+        "feature": "sex_0",
+        "importance": 0.03482997044920921
+      },
+      {
+        "feature": "slope_2",
+        "importance": 0.033142928034067154
+      },
+      {
+        "feature": "chest_pain_type_3",
+        "importance": 0.032881129533052444
+      },
+      {
+        "feature": "age",
+        "importance": 0.03228164464235306
+      },
+      {
+        "feature": "restecg_0",
+        "importance": 0.031329426914453506
+      },
+      {
+        "feature": "restecg_1",
+        "importance": 0.028447946533560753
+      },
+      {
+        "feature": "max_hr",
+        "importance": 0.026533093303442
+      },
+      {
+        "feature": "sex_1",
+        "importance": 0.025620687752962112
+      },
+      {
+        "feature": "resting_bp",
+        "importance": 0.019806375727057457
+      },
+      {
+        "feature": "exang_1",
+        "importance": 0.019511649385094643
+      },
+      {
+        "feature": "slope_0",
+        "importance": 0.007494854275137186
+      },
+      {
+        "feature": "chest_pain_type_1",
+        "importance": 0.0
+      },
+      {
+        "feature": "fasting_blood_sugar_0",
+        "importance": 0.0
+      },
+      {
+        "feature": "fasting_blood_sugar_1",
+        "importance": 0.0
+      },
+      {
+        "feature": "restecg_2",
+        "importance": 0.0
+      },
+      {
+        "feature": "thal_0",
+        "importance": 0.0
+      },
+      {
+        "feature": "thal_1",
+        "importance": 0.0
+      }
+    ],
+    "predictions": [
+      {
+        "row_index": 179,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.03663874790072441
+      },
+      {
+        "row_index": 197,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.3073669373989105
+      },
+      {
+        "row_index": 285,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.032437052577733994
+      },
+      {
+        "row_index": 194,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.8368480205535889
+      },
+      {
+        "row_index": 188,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.6667077541351318
+      },
+      {
+        "row_index": 240,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.15256598591804504
+      },
+      {
+        "row_index": 140,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9505590796470642
+      },
+      {
+        "row_index": 167,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.4445798695087433
+      },
+      {
+        "row_index": 136,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9458434581756592
+      },
+      {
+        "row_index": 228,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.3425590693950653
+      },
+      {
+        "row_index": 95,
+        "actual": 1,
+        "predicted": 0,
+        "positive_probability": 0.2875508964061737
+      },
+      {
+        "row_index": 107,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.7729832530021667
+      },
+      {
+        "row_index": 257,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.09969618171453476
+      },
+      {
+        "row_index": 102,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9144824743270874
+      },
+      {
+        "row_index": 130,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9532721638679504
+      },
+      {
+        "row_index": 100,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.7713463306427002
+      },
+      {
+        "row_index": 27,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9273200631141663
+      },
+      {
+        "row_index": 43,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.8623489141464233
+      },
+      {
+        "row_index": 28,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.8494178056716919
+      },
+      {
+        "row_index": 0,
+        "actual": 1,
+        "predicted": 0,
+        "positive_probability": 0.40491703152656555
+      },
+      {
+        "row_index": 267,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.8783245086669922
+      },
+      {
+        "row_index": 252,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.5210927724838257
+      },
+      {
+        "row_index": 133,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.8926545977592468
+      },
+      {
+        "row_index": 302,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.8683032989501953
+      },
+      {
+        "row_index": 35,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9624606966972351
+      },
+      {
+        "row_index": 268,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.06813780218362808
+      },
+      {
+        "row_index": 239,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.19952936470508575
+      },
+      {
+        "row_index": 141,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.7476681470870972
+      },
+      {
+        "row_index": 264,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.1615125983953476
+      },
+      {
+        "row_index": 150,
+        "actual": 1,
+        "predicted": 0,
+        "positive_probability": 0.17281295359134674
+      },
+      {
+        "row_index": 297,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.05212210863828659
+      },
+      {
+        "row_index": 41,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9191510081291199
+      },
+      {
+        "row_index": 51,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.7022072076797485
+      },
+      {
+        "row_index": 186,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.05434757471084595
+      },
+      {
+        "row_index": 217,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.02509455941617489
+      },
+      {
+        "row_index": 70,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.5888469815254211
+      },
+      {
+        "row_index": 185,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.36737775802612305
+      },
+      {
+        "row_index": 26,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.945573091506958
+      },
+      {
+        "row_index": 135,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9228246212005615
+      },
+      {
+        "row_index": 85,
+        "actual": 1,
+        "predicted": 0,
+        "positive_probability": 0.4922405481338501
+      },
+      {
+        "row_index": 281,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.37675490975379944
+      },
+      {
+        "row_index": 62,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9298503994941711
+      },
+      {
+        "row_index": 142,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9851226210594177
+      },
+      {
+        "row_index": 61,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.5772584080696106
+      },
+      {
+        "row_index": 236,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.06382088363170624
+      },
+      {
+        "row_index": 272,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.748995840549469
+      },
+      {
+        "row_index": 65,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9035462141036987
+      },
+      {
+        "row_index": 293,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.8854811191558838
+      },
+      {
+        "row_index": 89,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.8087448477745056
+      },
+      {
+        "row_index": 286,
+        "actual": 0,
+        "predicted": 1,
+        "positive_probability": 0.8860663175582886
+      },
+      {
+        "row_index": 271,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.4923821985721588
+      },
+      {
+        "row_index": 44,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.838201642036438
+      },
+      {
+        "row_index": 83,
+        "actual": 1,
+        "predicted": 0,
+        "positive_probability": 0.4006262719631195
+      },
+      {
+        "row_index": 166,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.02061067707836628
+      },
+      {
+        "row_index": 131,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9507569074630737
+      },
+      {
+        "row_index": 123,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9537729024887085
+      },
+      {
+        "row_index": 14,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9061338901519775
+      },
+      {
+        "row_index": 4,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.6678410768508911
+      },
+      {
+        "row_index": 224,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.03911718353629112
+      },
+      {
+        "row_index": 202,
+        "actual": 0,
+        "predicted": 0,
+        "positive_probability": 0.10072337836027145
+      },
+      {
+        "row_index": 12,
+        "actual": 1,
+        "predicted": 1,
+        "positive_probability": 0.9480443000793457
+      }
+    ],
+    "versions": {
+      "python": "3.13.5",
+      "pandas": "2.2.3",
+      "scikit_learn": "1.8.0",
+      "xgboost": "3.1.3"
+    },
+    "methodology": "Разделение с сохранением долей классов. Все параметры заполнения пропусков и кодирования категорий определяются исключительно по обучающей выборке. Метрики вычисляются на отложенной тестовой выборке. Положительный класс преобразуется в 1, другой класс — в 0."
+  }
+}
