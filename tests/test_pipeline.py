@@ -20,6 +20,7 @@ def make_config(**changes):
         positive_label=1, test_size=0.2, n_estimators=25,
         max_depth=3, learning_rate=0.05, subsample=0.8,
         colsample_bytree=0.8, random_state=42,
+        remove_duplicates=True,
     )
     options.update(changes)
     return RunConfig(**options)
