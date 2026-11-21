@@ -1,0 +1,46 @@
+:root{font-family:Inter,'Segoe UI',Arial,sans-serif;color:#203a3c}
+*{box-sizing:border-box}
+body{margin:0;background:#f7f6f1}
+button,select{font:inherit}
+button{cursor:pointer}
+button:disabled{cursor:default;opacity:.56}
+.editor-root{height:570px;width:100%;display:flex;border:1px solid #d3dfda;border-radius:14px;background:#fff;overflow:hidden}
+.editor-drawer{flex:none;background:#f7f8f4;overflow:hidden;transition:width 200ms ease;border-right:1px solid #e0e8e1}
+.editor-drawer.open{width:225px}
+.editor-drawer.closed{width:0;border-right:0}
+.drawer-inner{width:225px;padding:16px 12px;overflow:auto;height:100%}
+.drawer-title{font-size:16px;font-weight:700;line-height:1.5}
+.drawer-explain{font-size:12px;line-height:1.45;color:#5e7170}
+.block-option{display:block;text-align:left;width:100%;background:white;border:1px solid #b8cbc5;border-radius:10px;padding:11px 10px;margin-bottom:9px;color:#24484b;transition:background .15s}
+.block-option:hover:not(:disabled){background:#e9f5ef}
+.block-option strong{display:block;font-size:13px}
+.block-option small{display:block;color:#586c6b;font-size:11px;margin-top:5px}
+.drawer-toggle{width:24px;flex:none;z-index:5;align-self:stretch;border:0;background:#e9f1ed;color:#235d66;font-weight:700;padding:0;border-right:1px solid #c9d9d5}
+.drawer-toggle:hover{background:#d6e5df}
+.drawer-toggle:focus-visible,.edge-toolbar button:focus-visible,.edge-toolbar select:focus-visible,.node-toolbar button:focus-visible,.block-option:focus-visible{outline:3px solid #2b7f89;outline-offset:-2px}
+.editor-canvas{position:relative;flex:1;min-width:0;overflow:hidden;background:#fbfcfa}
+.pipeline-node{display:flex;align-items:center;justify-content:center;background:#fff;border:2px solid #399278;box-shadow:0 4px 14px rgba(21,71,62,.08);border-radius:14px;width:220px;min-height:72px;padding:16px 18px;font-size:15px;font-weight:650;color:#204a45;text-align:center;position:relative}
+.pipeline-node.active{border-color:#1b6571;box-shadow:0 0 0 4px rgba(52,134,140,.14)}
+.node-delete-button{position:absolute;right:7px;top:7px;width:24px;height:24px;min-height:24px;padding:0;border:1px solid #e2bbb5;border-radius:7px;background:#fff;color:#9e4033;font-size:17px;line-height:20px;cursor:pointer}
+.node-delete-button:hover{background:#fff1ef;border-color:#bf6b60}
+.node-delete-button:focus-visible{outline:3px solid rgba(158,64,51,.28);outline-offset:1px}
+.react-flow__handle.pipeline-handle{width:16px;height:16px;border:3px solid #fff;background:#246e77;box-shadow:0 0 0 1px #246e77}
+.react-flow__handle.pipeline-handle:hover{width:20px;height:20px;background:#1b807f}
+.react-flow__edge-path{stroke-width:3px;cursor:pointer}
+.react-flow__edge.selected .react-flow__edge-path{stroke:#d1872c!important;stroke-width:4px!important}
+.react-flow__edge-interaction{stroke-width:28px}
+.editor-toolbar{position:absolute;left:60px;bottom:9px;right:8px;max-width:calc(100% - 70px);pointer-events:none;color:#506a69;font-size:11px;background:rgba(255,255,255,.91);padding:7px 10px;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.edge-toolbar{z-index:12;position:absolute;right:12px;top:12px;display:flex;flex-wrap:wrap;align-items:end;gap:8px;padding:10px;border-radius:12px;border:1px solid #b9ccc9;background:#fff;box-shadow:0 7px 22px rgba(20,49,49,.15);max-width:calc(100% - 24px)}
+.edge-toolbar b{font-size:13px;align-self:center;padding-right:3px}
+.edge-toolbar label{display:flex;flex-direction:column;font-size:11px;gap:3px;color:#516969}
+.edge-toolbar select{background:#fff;border:1px solid #c4d3ce;border-radius:7px;padding:6px;max-width:155px;color:#203a3c;font-size:12px}
+.edge-toolbar button{border:1px solid #b8cbc5;background:#fff;color:#204a45;padding:7px 10px;border-radius:7px;font-size:12px;min-height:31px}
+.edge-toolbar .apply{background:#246773;border-color:#246773;color:#fff}
+.edge-toolbar .remove{color:#9e4033;border-color:#e7c7c2}
+.node-toolbar{z-index:12;position:absolute;right:12px;top:12px;display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;border:1px solid #b9ccc9;background:#fff;box-shadow:0 7px 22px rgba(20,49,49,.15);max-width:calc(100% - 24px)}
+.node-toolbar b{font-size:13px;color:#204a45}
+.node-toolbar button{border:1px solid #b8cbc5;background:#fff;color:#204a45;padding:7px 10px;border-radius:7px;font-size:12px;min-height:31px}
+.node-toolbar .apply{background:#246773;border-color:#246773;color:#fff}
+.node-toolbar .remove{color:#9e4033;border-color:#e7c7c2}
+@media(max-width:780px){.editor-drawer.open{width:185px}.drawer-inner{width:185px}.edge-toolbar{top:auto;bottom:54px}.edge-toolbar b{width:100%}}
+

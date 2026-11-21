@@ -2,11 +2,24 @@
 from __future__ import annotations
 from contextlib import closing
 import json
+import os
 from pathlib import Path
 import sqlite3
 import uuid
 
-DB = Path(__file__).resolve().parent / "_data" / "workflow_runs.db"
+DB = Path(os.environ.get(
+    "WORKFLOW_DB_PATH",
+    Path(__file__).resolve().parent / "_data" / "workflow_runs.db",
+))
+
+
+def _fallback_study_name(summary: dict, dataset: str, method: str, created: str) -> str:
+    """Понятное имя для старых записей, где название исследования ещё не сохранялось."""
+    from .spec import METHODS
+
+    title = METHODS.get(method, {}).get("title", method)
+    date = str(created).replace("T", " ")[:16]
+    return summary.get("study_name") or f"Анализ {dataset} — {title} ({date})"
 
 
 def safe_summary(summary: dict) -> dict:
@@ -65,15 +78,20 @@ def recent_runs(db: Path = DB) -> list[dict]:
     with closing(sqlite3.connect(db)) as cn:
         _ensure_schema(cn)
         rows = cn.execute(
-            "SELECT id,created,dataset,method,summary FROM runs "
+            "SELECT r.id,r.created,r.dataset,r.method,r.summary,"
+            "SUM(CASE WHEN a.asset_key LIKE 'figure:%' THEN 1 ELSE 0 END),"
+            "MAX(CASE WHEN a.asset_key='report:docx' THEN 1 ELSE 0 END) "
+            "FROM runs r LEFT JOIN run_assets a ON a.run_id=r.id "
+            "GROUP BY r.id,r.created,r.dataset,r.method,r.summary "
             "ORDER BY created DESC LIMIT 30"
         ).fetchall()
     result = []
-    for rid, created, dataset, method, raw in rows:
+    for rid, created, dataset, method, raw, figure_count, has_report in rows:
         try:
             summary = json.loads(raw)
             metrics = summary.get("metrics", {})
         except (TypeError, json.JSONDecodeError):
+            summary = {}
             metrics = {}
         result.append(
             {
@@ -81,6 +99,10 @@ def recent_runs(db: Path = DB) -> list[dict]:
                 "created": created,
                 "dataset": dataset,
                 "method": method,
+                "study_name": _fallback_study_name(summary, dataset, method, created),
+                "n_classes": summary.get("n_classes"),
+                "figure_count": int(figure_count or 0),
+                "has_report": bool(has_report),
                 "accuracy": metrics.get("accuracy"),
                 "f1": metrics.get("f1", metrics.get("f1_macro")),
             }

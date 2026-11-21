@@ -11,12 +11,24 @@ from sklearn.metrics import roc_curve, auc, precision_recall_curve, average_prec
 
 from .engine import RunArtifacts
 from .spec import CHARTS, available_charts
+from .shap_service import ShapExplanation, compute_shap_explanation
 
 plt.rcParams["font.family"] = "DejaVu Sans"
 SURFACE = "#F3F6FA"
 INK = "#26364A"
 GRID = "#C9D3DF"
 ACCENT = "#2D8F87"
+
+
+def descriptive_feature_groups(columns, size: int = 4) -> list[list[str]]:
+    """Делит признаки на небольшие группы для читаемых графиков"""
+    names = [str(column) for column in columns]
+    return [names[start:start + size] for start in range(0, len(names), size)]
+
+
+def figure_base_key(key: str) -> str:
+    """Возвращает тип графика для ключа сохранённой группы"""
+    return key.split("__", 1)[0]
 
 
 def _style_figure(fig) -> None:
@@ -47,37 +59,41 @@ def _png(fig) -> bytes:
     return buf.getvalue()
 
 
-def _beeswarm(artifact: RunArtifacts, class_name: str = "") -> bytes:
-    import shap  # дорогую библиотеку импортируем ТОЛЬКО при выбранном SHAP
+def _shap_png(result: ShapExplanation, chart: str) -> bytes:
+    import shap
 
-    X = artifact.X_explain[:min(120, len(artifact.X_explain))]
-    if len(X) < 2:
-        raise ValueError("Недостаточно наблюдений для SHAP Beeswarm.")
-    e = shap.TreeExplainer(artifact.model, model_output="raw")
-    explanation = e(X)
-    values = np.asarray(explanation.values)
-    if values.ndim == 3:
-        i = artifact.labels.index(class_name) if class_name in artifact.labels else 0
-        values = values[:, :, i]
-    if values.ndim != 2:
-        raise ValueError(f"SHAP вернул неподдерживаемую форму {values.shape}.")
-    exp = shap.Explanation(values=values, data=X, feature_names=artifact.feature_names)
     plt.figure(figsize=(7.2, 4.8), facecolor=SURFACE)
-    shap.plots.beeswarm(exp, max_display=min(12, len(artifact.feature_names)), show=False)
+    max_display = min(12, len(result.explanation.feature_names))
+    if chart in ("shap", "shap_beeswarm"):
+        shap.plots.beeswarm(result.explanation, max_display=max_display, show=False)
+        title = "SHAP Beeswarm"
+    else:
+        shap.plots.bar(result.explanation, max_display=max_display, show=False)
+        title = "SHAP Bar · средние абсолютные вклады"
     fig = plt.gcf()
-    fig.suptitle("SHAP Beeswarm · raw output (не вероятность)", fontsize=11)
+    fig.suptitle(
+        f"{title} · класс {result.class_name}\n{result.output_scale}",
+        fontsize=10,
+    )
     return _png(fig)
 
 
-def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> bytes:
+def create_chart(
+    artifact: RunArtifacts,
+    chart: str,
+    shap_class: str = "",
+    shap_result: ShapExplanation | None = None,
+    descriptive_columns: list[str] | None = None,
+) -> bytes:
     summary = artifact.summary
     classes = summary["classes"]
     n = len(classes)
     v = summary["_viz"]
     y = np.asarray(v["y_true"], dtype=int)
     p = np.asarray(v["probabilities"], dtype=float)
-    if chart == "shap":
-        return _beeswarm(artifact, shap_class)
+    if chart in ("shap", "shap_beeswarm", "shap_bar"):
+        result = shap_result or compute_shap_explanation(artifact, shap_class)
+        return _shap_png(result, chart)
     if chart == "confusion":
         cm = np.asarray(summary["confusion_matrix"])
         fig, ax = plt.subplots(figsize=(max(5.4, n * 1.25), max(4.2, n * 1.0)), facecolor=SURFACE)
@@ -95,6 +111,7 @@ def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> by
         return _png(fig)
     if chart in ("roc", "pr"):
         fig, ax = plt.subplots(figsize=(6.4, 4.4), facecolor=SURFACE)
+        curves = []
         for i, label in enumerate(classes):
             if n == 2 and i == 0:
                 continue
@@ -103,11 +120,15 @@ def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> by
                 xs, ys, _ = roc_curve(binary, p[:, i])
                 desc = f"{label}: AUC {auc(xs, ys):.3f}"
                 ax.plot(xs, ys, label=desc, color=ACCENT if n == 2 else None, linewidth=2)
+                curves.append({"class": str(label), "x": xs.tolist(), "y": ys.tolist(),
+                               "auc": float(auc(xs, ys))})
             else:
                 precision, recall, _ = precision_recall_curve(binary, p[:, i])
                 ap = average_precision_score(binary, p[:, i])
                 ax.plot(recall, precision, label=f"{label}: AP {ap:.3f}",
                         color=ACCENT if n == 2 else None, linewidth=2)
+                curves.append({"class": str(label), "recall": recall.tolist(),
+                               "precision": precision.tolist(), "average_precision": float(ap)})
         if chart == "roc":
             ax.plot([0, 1], [0, 1], "--", color="grey", alpha=.6)
             ax.set(xlabel="Доля ложноположительных (FPR)", ylabel="Чувствительность (TPR)",
@@ -117,6 +138,10 @@ def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> by
                    title="PR-кривая" if n == 2 else "PR-кривые OvR: каждый класс против остальных")
         ax.legend(loc="best", fontsize=8)
         ax.grid(alpha=.15)
+        summary.setdefault("chart_metadata", {})[chart] = {
+            "mode": "binary" if n == 2 else "one-vs-rest",
+            "curves": curves,
+        }
         return _png(fig)
     if chart == "importance":
         data = [row for row in summary["importance"] if row["value"] > 0][:12]
@@ -145,7 +170,10 @@ def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> by
         fig.colorbar(im, ax=ax)
         ax.set_title("Корреляция Пирсона — описательно")
         return _png(fig)
-    shown = list(data.columns)[:4]
+    shown = descriptive_columns or [str(column) for column in data.columns]
+    shown = [column for column in shown if column in data.columns]
+    if not shown:
+        raise ValueError("Нет числовых признаков для выбранного описательного графика.")
     ncols = 1 if len(shown) == 1 else 2
     nrows = int(np.ceil(len(shown) / ncols))
     fig, axes = plt.subplots(nrows, ncols, figsize=(7.2, max(3.4, nrows * 3.0)),
@@ -170,17 +198,58 @@ def create_chart(artifact: RunArtifacts, chart: str, shap_class: str = "") -> by
 
 
 def render_selected(artifact: RunArtifacts) -> tuple[dict[str, bytes], list[str]]:
-    """Графики вычисляются только по выбору, включая ленивый SHAP."""
+    """Графики вычисляются по выбору; Beeswarm и Bar делят один SHAP-расчёт."""
     s = artifact.summary["config"]
     statuses = available_charts(s, artifact.summary["n_classes"])
     figures, warnings = {}, []
-    for chart in s["output"].get("charts", []):
+    selected = list(s["output"].get("charts", []))
+    shap_keys = [key for key in selected if key in ("shap", "shap_beeswarm", "shap_bar")]
+    shap_result = None
+    if shap_keys:
+        try:
+            shap_result = compute_shap_explanation(
+                artifact, s["output"].get("shap_class", "")
+            )
+            artifact.summary["shap_metadata"] = shap_result.metadata()
+        except Exception as exc:
+            for key in shap_keys:
+                warnings.append(f"Не удалось построить «{CHARTS[key]}»: {exc}")
+    data = artifact.descriptive_frame
+    included = [str(column) for column in data.columns]
+    requested = list(s["preprocess"].get("descriptive_columns", []))
+    skipped = [str(column) for column in requested if str(column) not in included]
+    artifact.summary["descriptive_visualization"] = {
+        "included": included,
+        "skipped": skipped,
+        "groups": {},
+    }
+    for chart in selected:
         ok, msg = statuses.get(chart, (False, "Неизвестный график"))
         if not ok:
             warnings.append(f"{CHARTS.get(chart,chart)}: {msg}")
             continue
+        if chart in shap_keys and shap_result is None:
+            continue
         try:
-            figures[chart] = create_chart(artifact, chart, s["output"].get("shap_class", ""))
+            if chart in ("hist", "box"):
+                groups = descriptive_feature_groups(data.columns)
+                if not groups:
+                    raise ValueError("Нет числовых признаков для описательной визуализации.")
+                for index, columns in enumerate(groups, start=1):
+                    key = chart if index == 1 else f"{chart}__{index}"
+                    figures[key] = create_chart(
+                        artifact,
+                        chart,
+                        descriptive_columns=columns,
+                    )
+                    artifact.summary["descriptive_visualization"]["groups"][key] = columns
+            else:
+                figures[chart] = create_chart(
+                    artifact,
+                    chart,
+                    s["output"].get("shap_class", ""),
+                    shap_result=shap_result,
+                )
         except Exception as exc:
             warnings.append(f"Не удалось построить «{CHARTS[chart]}»: {exc}")
     return figures, warnings

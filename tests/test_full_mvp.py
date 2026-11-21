@@ -103,7 +103,8 @@ def test_missing_category_and_report():
 def test_chart_restrictions():
     s = default_settings()
     s["analysis"]["method"] = "random_forest"
-    assert available_charts(s, 3)["shap"][0] is False
+    assert available_charts(s, 3)["shap_beeswarm"][0] is True
+    assert available_charts(s, 3)["shap_bar"][0] is True
     assert available_charts(s, 3)["roc"][0] is True
     s["preprocess"]["descriptive"] = False
     assert available_charts(s, 3)["hist"][0] is False
@@ -145,6 +146,10 @@ def test_history_keeps_summary_figures_and_report(tmp_path):
         "created": summary["created_at"],
         "dataset": "test.csv",
         "method": "xgboost",
+        "study_name": "Анализ test.csv — XGBoost (2026-11-07 12:00)",
+        "n_classes": None,
+        "figure_count": 1,
+        "has_report": True,
         "accuracy": 0.8,
         "f1": 0.75,
     }]

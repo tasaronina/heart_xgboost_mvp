@@ -1,0 +1,15 @@
+{
+  "name": "diploma-graph-editor",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {"build": "vite build", "dev": "vite --host", "test": "node --test src/graphState.test.mjs"},
+  "dependencies": {
+    "@xyflow/react": "12.12.1",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "streamlit-component-lib": "2.0.0"
+  },
+  "devDependencies": {"@vitejs/plugin-react": "4.3.4", "vite": "5.4.21"}
+}
+

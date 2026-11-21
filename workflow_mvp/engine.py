@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from copy import deepcopy
 from datetime import datetime, timezone
+from importlib.metadata import version as package_version
+import inspect
 from math import ceil
 from typing import Any
 import platform
@@ -24,7 +26,7 @@ from xgboost import XGBClassifier
 import xgboost
 
 from .data_io import replace_markers
-from .spec import METHODS, validate_settings
+from .spec import METHODS, normalize_settings, validate_settings
 
 
 @dataclass
@@ -34,6 +36,7 @@ class RunArtifacts:
     model: Any
     feature_names: list[str]
     X_explain: np.ndarray
+    X_background: np.ndarray
     descriptive_frame: pd.DataFrame
     labels: list[str]
 
@@ -61,9 +64,71 @@ def _prepare_X(X: pd.DataFrame, categorical: list[str]) -> pd.DataFrame:
     return X
 
 
+def logistic_solver_details(params: dict, n_classes: int) -> tuple[dict, dict]:
+    """Возвращает совместимые аргументы sklearn и сохраняемые пояснения.
+
+    В sklearn 1.9 ``penalty`` уже deprecated, поэтому тип регуляризации
+    выражается через l1_ratio. Для поддерживаемых requirements старых версий
+    используется прежний параметр penalty.
+    """
+    regularization = str(params.get("regularization", "l2"))
+    if regularization not in ("l2", "l1", "elasticnet"):
+        raise ValueError("Неизвестный тип регуляризации логистической регрессии.")
+    solver = "lbfgs" if regularization == "l2" else "saga"
+    if regularization == "l2":
+        ratio = 0.0
+    elif regularization == "l1":
+        ratio = 1.0
+    else:
+        ratio = float(params.get("l1_ratio", 0.5))
+    if not 0 <= ratio <= 1:
+        raise ValueError("l1_ratio должен находиться от 0 до 1.")
+
+    reason = (
+        f"Решатель {solver} выбран автоматически: он совместим с регуляризацией "
+        f"{regularization.upper() if regularization != 'elasticnet' else 'Elastic Net'} "
+        f"и задачей с {n_classes} классами в scikit-learn {sklearn.__version__}."
+    )
+    class_weight = params.get("class_weight")
+    if class_weight not in (None, "balanced"):
+        raise ValueError("class_weight должен быть None или balanced.")
+    args = {
+        "C": float(params.get("C", 1.0)),
+        "class_weight": class_weight,
+        "tol": float(params.get("tol", 0.0001)),
+        "fit_intercept": bool(params.get("fit_intercept", True)),
+        "max_iter": int(params.get("max_iter", 800)),
+        "solver": solver,
+    }
+    signature = inspect.signature(LogisticRegression)
+    penalty_default = signature.parameters["penalty"].default
+    if penalty_default == "deprecated":
+        args["l1_ratio"] = ratio
+    else:
+        args["penalty"] = regularization
+        if regularization == "elasticnet":
+            args["l1_ratio"] = ratio
+    saved = {
+        "regularization": regularization,
+        "C": args["C"],
+        "class_weight": class_weight,
+        "l1_ratio": ratio,
+        "max_iter": args["max_iter"],
+        "tol": args["tol"],
+        "fit_intercept": args["fit_intercept"],
+        "solver": solver,
+        "solver_reason": reason,
+    }
+    return args, saved
+
+
 def _model_for(settings: dict, n_classes: int):
     name = settings["analysis"]["method"]
-    cfg = {**METHODS[name]["parameters"], **settings["analysis"].get("params", {})}
+    cfg = {
+        **METHODS[name]["parameters"],
+        **settings["analysis"].get("params_by_method", {}).get(name, {}),
+        **settings["analysis"].get("params", {}),
+    }
     seed = int(settings["preprocess"].get("random_state", 42))
     if name == "xgboost":
         obj = "binary:logistic" if n_classes == 2 else "multi:softprob"
@@ -80,12 +145,15 @@ def _model_for(settings: dict, n_classes: int):
                     max_depth=int(cfg["max_depth"]), min_samples_leaf=int(cfg["min_samples_leaf"]),
                     random_state=seed, n_jobs=2)
     else:
-        model = LogisticRegression(C=float(cfg["C"]), max_iter=int(cfg["max_iter"]), solver="lbfgs")
+        args, cfg = logistic_solver_details(cfg, n_classes)
+        args["random_state"] = seed
+        model = LogisticRegression(**args)
     return model, cfg
 
 
 def run_analysis(frame: pd.DataFrame, settings: dict, dataset_info: dict) -> RunArtifacts:
     """Fit after stratified split; all fitted transformations learn on Train only."""
+    settings = normalize_settings(settings)
     p = settings["preprocess"]
     target = p.get("target")
     if target not in frame.columns:
@@ -210,8 +278,17 @@ def run_analysis(frame: pd.DataFrame, settings: dict, dataset_info: dict) -> Run
     importance = sorted([
         {"feature": n, "value": float(w)} for n, w in zip(names, weights)
     ], key=lambda row: row["value"], reverse=True)
+    created_at = datetime.now(timezone.utc)
+    study_name = str(settings.get("study", {}).get("name", "")).strip()
+    if not study_name:
+        study_name = (
+            f"Анализ {dataset_info.get('dataset_name', 'данных')} — "
+            f"{METHODS[settings['analysis']['method']]['title']} ({created_at.date().isoformat()})"
+        )
+        settings["study"]["name"] = study_name
     summary = {
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": created_at.isoformat(),
+        "study_name": study_name,
         "dataset": dict(dataset_info),
         "pipeline": ["input", "preprocess", "analysis", "output"],
         "config": deepcopy(settings),
@@ -230,7 +307,8 @@ def run_analysis(frame: pd.DataFrame, settings: dict, dataset_info: dict) -> Run
         "importance_kind": importance_kind,
         "descriptive": stats,
         "versions": {"python": platform.python_version(), "pandas": pd.__version__,
-                     "sklearn": sklearn.__version__, "xgboost": xgboost.__version__},
+                     "sklearn": sklearn.__version__, "xgboost": xgboost.__version__,
+                     "shap": package_version("shap")},
         "methodology": (
             "Стратифицированное Train/Test. Imputer/One-Hot/StandardScaler при выборе "
             "подгоняются исключительно на Train. Описательная статистика рассчитана по "
@@ -242,4 +320,5 @@ def run_analysis(frame: pd.DataFrame, settings: dict, dataset_info: dict) -> Run
     summary["_viz"] = {"y_true": y_test.tolist(), "y_pred": np.asarray(prediction).astype(int).tolist(),
                        "probabilities": probabilities.tolist()}
     return RunArtifacts(summary=summary, model=model, feature_names=names,
-                        X_explain=Xte, descriptive_frame=desc_frame, labels=classes)
+                        X_explain=Xte, X_background=Xtr,
+                        descriptive_frame=desc_frame, labels=classes)
